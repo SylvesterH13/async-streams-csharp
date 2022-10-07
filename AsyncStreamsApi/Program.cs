@@ -9,7 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<IMovieRepository, MovieCsvRepository>();
+builder.Services.AddScoped<IMovieRepository, MovieSqlRepository>();
 
 var app = builder.Build();
 
