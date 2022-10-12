@@ -1,13 +1,14 @@
-using AsyncStreams.BlazorServer.Web.Data;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+
+builder.Services.AddScoped(sp =>
+{
+    var apiBaseUrl = builder.Configuration.GetSection("ApiBaseUrl").Value;
+    return new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
+});
 
 var app = builder.Build();
 
