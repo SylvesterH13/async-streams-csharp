@@ -1,0 +1,66 @@
+﻿@using System.Text.Json
+@using AsyncStreams.BlazorWasm.Web.Model
+
+@page "/movies"
+@inject HttpClient HttpClient
+
+<PageTitle>Movies</PageTitle>
+
+<p>This page demonstrates the Blazor Server retrieving data consuming an API that returns a stream.</p>
+
+<button class="btn btn-primary" @onclick="FetchMovies">Star fetching</button>
+
+@if (movies != null && movies.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Rating</th>
+                <th>Runtime (min)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in movies)
+            {
+                <tr>
+                    <td>@m.Id</td>
+                    <td>@m.Title</td>
+                    <td>@m.Year</td>
+                    <td>@m.Rating</td>
+                    <td>@m.RuntimeInMinutes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<MovieResponse>? movies;
+
+    private async Task FetchMovies()
+    {
+        movies = new List<MovieResponse>();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/movie");
+        request.SetBrowserResponseStreamingEnabled(true);
+
+        var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        
+        var responseStream = await response.Content.ReadAsStreamAsync();
+        var moviesAsyncEnumerable = JsonSerializer.DeserializeAsyncEnumerable<MovieResponse>(responseStream, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                DefaultBufferSize = 5
+            });
+
+        await foreach (var m in moviesAsyncEnumerable)
+        {
+            movies.Add(m!);
+            StateHasChanged();
+        }
+    }
+}
