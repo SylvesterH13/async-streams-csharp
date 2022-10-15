@@ -5,7 +5,6 @@ namespace AsyncStreamsApi.Repositories
 {
     public class MovieCsvRepository : IMovieRepository
     {
-        private const int DELAY_IN_MILLISECONDS = 100;
         private const string CSV_PATH = @"data\ratings.csv";
 
         private const int ID_INDEX = 0;
@@ -15,6 +14,13 @@ namespace AsyncStreamsApi.Repositories
         private const int YEAR_INDEX = 8;
 
         private const int DEFAULT_BUFFER_SIZE = 4096;
+
+        private readonly int _delayInMilliseconds;
+
+        public MovieCsvRepository(IConfiguration configuration)
+        {
+            _delayInMilliseconds = configuration.GetValue<int>("StreamDelayInMilliseconds");
+        }
 
         private static StreamReader AsyncStreamReader(string path, Encoding encoding)
             => new StreamReader(
@@ -31,7 +37,7 @@ namespace AsyncStreamsApi.Repositories
                 var line = await streamReader.ReadLineAsync();
 
                 // To be able to see the effect of IAsyncEnumerable
-                await Task.Delay(DELAY_IN_MILLISECONDS);
+                await Task.Delay(_delayInMilliseconds);
 
                 var values = line.Split(',');
                 yield return new Movie
