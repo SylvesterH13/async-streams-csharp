@@ -1,6 +1,18 @@
 using AsyncStreamsApi.Repositories;
 
+const string AllowKnownClientsCorsPolicyName = "AllowKnownClients";
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy(name: AllowKnownClientsCorsPolicyName,
+        policy =>
+        {
+            var knownClientsUrls = builder.Configuration.GetSection("ClientsUrls").Get<string[]>();
+            policy.WithOrigins(knownClientsUrls);
+        });
+});
 
 // Add services to the container.
 
@@ -21,6 +33,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(AllowKnownClientsCorsPolicyName);
 
 app.UseAuthorization();
 
