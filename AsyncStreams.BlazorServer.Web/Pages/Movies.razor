@@ -3,6 +3,7 @@
 
 @page "/movies"
 @inject HttpClient HttpClient
+@implements IDisposable
 
 <PageTitle>Movies</PageTitle>
 
@@ -44,6 +45,7 @@ else if (movies?.Any() == true)
 @code {
 
     private List<MovieResponse>? movies;
+    private CancellationTokenSource? cts;
 
     private async Task FetchMovies()
     {
@@ -51,19 +53,27 @@ else if (movies?.Any() == true)
 
         StateHasChanged();
 
-        var response = await HttpClient.GetAsync("/api/movie", HttpCompletionOption.ResponseHeadersRead);
-        
-        var responseStream = await response.Content.ReadAsStreamAsync();
+        cts = new CancellationTokenSource();
+
+        var response = await HttpClient.GetAsync("/api/movie", HttpCompletionOption.ResponseHeadersRead, cts.Token);
+
+        var responseStream = await response.Content.ReadAsStreamAsync(cts.Token);
         var moviesAsyncEnumerable = JsonSerializer.DeserializeAsyncEnumerable<MovieResponse>(responseStream, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
                 DefaultBufferSize = 5
-            });
+            },
+            cts.Token);
 
         await foreach (var m in moviesAsyncEnumerable)
         {
             movies.Add(m!);
             StateHasChanged();
         }
+    }
+
+    public void Dispose()
+    {
+        cts?.Cancel();
     }
 }
