@@ -35,11 +35,8 @@ namespace AsyncStreamsApi.Repositories
             while (!streamReader.EndOfStream)
             {
                 var line = await streamReader.ReadLineAsync();
-
-                // To be able to see the effect of IAsyncEnumerable
-                await Task.Delay(_delayInMilliseconds);
-
                 var values = line.Split(',');
+
                 yield return new Movie
                 {
                     Id = values[ID_INDEX],
@@ -48,6 +45,11 @@ namespace AsyncStreamsApi.Repositories
                     RuntimeInMinutes = int.Parse(values[RUNTIME_IN_MINUTES_INDEX]),
                     Year = int.Parse(values[YEAR_INDEX]),
                 };
+
+                Console.WriteLine($"{DateTime.Now:HH:mm:ss} - A record has been fetched...");
+
+                // To be able to see the effect of IAsyncEnumerable
+                await Task.Delay(_delayInMilliseconds);
             }
         }
     }

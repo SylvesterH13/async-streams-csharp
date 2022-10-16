@@ -26,10 +26,12 @@ namespace AsyncStreamsApi.Repositories
 
             while (await reader.ReadAsync())
             {
+                yield return rowParser(reader);
+
+                Console.WriteLine($"{DateTime.Now:HH:mm:ss} - A record has been fetched...");
+
                 // To be able to see the effect of IAsyncEnumerable
                 await Task.Delay(_delayInMilliseconds);
-
-                yield return rowParser(reader);
             }
         }
     }
